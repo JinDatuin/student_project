@@ -1,47 +1,254 @@
 {% extends "student_register/base.html" %}
 
 {% block content %}
-<p class="h2">Student Register</p>
-<hr>
-<table class="table table-borderless">
-    <thead class="border-bottom font-weight-bold">
-        <tr>
-            <td>Student.No</td>
-            <td>First Name</td>
-            <td>Middle Name</td>
-            <td>Last Name</td>
-            <td>Email</td>
-            <td>Degree</td>
-            <td>
-                <a href="{% url 'student_insert' %}" class="btn btn-outline-success">
-                    <i class="fas fa-plus"></i> Add New
-                </a>
-            </td>
-        </tr>
-    </thead>
-    <tbody>
-        {% for student in student_list %}
-            <tr>
-                <td>{{student.student_number}}</td>
-                <td>{{student.first_name}}</td>
-                <td>{{student.middle_name}}</td>
-                <td>{{student.last_name}}</td>
-                <td>{{student.email}}</td>
-                <td>{{student.degree}}</td>
-                <td>
-                    <a href="{% url 'student_update' student.id %}" class="btn text-secondary px-0">
-                        <i class="far fa-edit fa-lg"></i>
-                    </a>
-                    <form action="{% url 'student_delete' student.id %}" method="post" class="d-inline">
-                        {% csrf_token %}
-                        <button type="submit" class="btn">
-                            <i class="far fa-trash-alt fa-lg text-danger float-right"></i>
-                        </button>
-                    </form>
-                </td>
-            </tr>
-        {% endfor %}
-    </tbody>
-</table>
+<div class="mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1"><i class="fas fa-users me-3 text-primary"></i>Student Directory</h2>
+            <p class="text-muted mb-0">Total Students: <span class="badge bg-primary">{{ student_list|length }}</span></p>
+        </div>
+        <a href="{% url 'student_insert' %}" class="btn btn-success btn-lg">
+            <i class="fas fa-plus-circle me-2"></i>Add New Student
+        </a>
+    </div>
+    
+    <!-- Search and Filter Section -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="input-group input-group-lg">
+                        <span class="input-group-text bg-light border-0">
+                            <i class="fas fa-search text-muted"></i>
+                        </span>
+                        <input type="text" class="form-control border-0" id="searchInput" placeholder="Search students by name, student number, or email...">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <select class="form-select form-select-lg" id="degreeFilter">
+                        <option value="">All Degrees</option>
+                        <option value="Computer Science">Computer Science</option>
+                        <option value="Engineering">Engineering</option>
+                        <option value="Business">Business</option>
+                        <option value="Medicine">Medicine</option>
+                        <option value="Arts">Arts</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Student Table -->
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0" id="studentTable">
+                    <thead>
+                        <tr>
+                            <th class="ps-4">#</th>
+                            <th>Student No</th>
+                            <th>Full Name</th>
+                            <th>Email</th>
+                            <th>Degree</th>
+                            <th class="text-end pe-4">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for student in student_list %}
+                        <tr class="student-row" data-degree="{{ student.degree }}">
+                            <td class="ps-4 fw-bold text-primary">{{ forloop.counter }}</td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-primary bg-opacity-10 rounded-circle p-2 me-3">
+                                        <i class="fas fa-id-card text-primary"></i>
+                                    </div>
+                                    <span class="fw-bold">{{ student.student_number }}</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="d-flex flex-column">
+                                    <span class="fw-bold">{{ student.first_name }} {{ student.last_name }}</span>
+                                    {% if student.middle_name %}
+                                    <small class="text-muted">Middle: {{ student.middle_name }}</small>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td>
+                                <a href="mailto:{{ student.email }}" class="text-decoration-none">
+                                    <i class="fas fa-envelope me-2 text-primary"></i>{{ student.email }}
+                                </a>
+                            </td>
+                            <td>
+                                <span class="badge rounded-pill bg-primary bg-opacity-10 text-primary py-2 px-3">
+                                    <i class="fas fa-graduation-cap me-1"></i>{{ student.degree }}
+                                </span>
+                            </td>
+                            <td class="text-end pe-4">
+                                <div class="btn-group" role="group">
+                                    <a href="{% url 'student_update' student.id %}" class="btn btn-outline-primary btn-sm" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-outline-info btn-sm view-details" data-bs-toggle="modal" data-bs-target="#studentModal{{ student.id }}" title="View Details">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <form action="{% url 'student_delete' student.id %}" method="post" class="d-inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-outline-danger btn-sm" title="Delete">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        
+                        <!-- Student Details Modal -->
+                        <div class="modal fade" id="studentModal{{ student.id }}" tabindex="-1">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content">
+                                    <div class="modal-header bg-primary text-white">
+                                        <h5 class="modal-title">
+                                            <i class="fas fa-user-graduate me-2"></i>Student Details
+                                        </h5>
+                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="text-center mb-4">
+                                            <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex p-4 mb-3">
+                                                <i class="fas fa-user-graduate fa-3x text-primary"></i>
+                                            </div>
+                                            <h4>{{ student.first_name }} {{ student.last_name }}</h4>
+                                            <p class="text-muted">{{ student.student_number }}</p>
+                                        </div>
+                                        
+                                        <div class="row">
+                                            <div class="col-6 mb-3">
+                                                <strong><i class="fas fa-id-card me-2 text-primary"></i>Student No:</strong>
+                                                <p class="mb-0">{{ student.student_number }}</p>
+                                            </div>
+                                            <div class="col-6 mb-3">
+                                                <strong><i class="fas fa-graduation-cap me-2 text-primary"></i>Degree:</strong>
+                                                <p class="mb-0">{{ student.degree }}</p>
+                                            </div>
+                                            <div class="col-6 mb-3">
+                                                <strong><i class="fas fa-user me-2 text-primary"></i>First Name:</strong>
+                                                <p class="mb-0">{{ student.first_name }}</p>
+                                            </div>
+                                            <div class="col-6 mb-3">
+                                                <strong><i class="fas fa-user me-2 text-primary"></i>Last Name:</strong>
+                                                <p class="mb-0">{{ student.last_name }}</p>
+                                            </div>
+                                            {% if student.middle_name %}
+                                            <div class="col-6 mb-3">
+                                                <strong><i class="fas fa-user me-2 text-primary"></i>Middle Name:</strong>
+                                                <p class="mb-0">{{ student.middle_name }}</p>
+                                            </div>
+                                            {% endif %}
+                                            <div class="col-12 mb-3">
+                                                <strong><i class="fas fa-envelope me-2 text-primary"></i>Email:</strong>
+                                                <p class="mb-0">{{ student.email }}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <a href="{% url 'student_update' student.id %}" class="btn btn-primary">
+                                            <i class="fas fa-edit me-2"></i>Edit
+                                        </a>
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-5">
+                                <div class="py-5">
+                                    <i class="fas fa-users fa-4x text-muted mb-3"></i>
+                                    <h4 class="text-muted">No Students Found</h4>
+                                    <p class="text-muted">Get started by adding your first student</p>
+                                    <a href="{% url 'student_insert' %}" class="btn btn-success btn-lg mt-2">
+                                        <i class="fas fa-plus-circle me-2"></i>Add First Student
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
 
+<!-- JavaScript for Search and Filter -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('searchInput');
+        const degreeFilter = document.getElementById('degreeFilter');
+        const studentRows = document.querySelectorAll('.student-row');
+        
+        function filterStudents() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const selectedDegree = degreeFilter.value;
+            
+            studentRows.forEach(row => {
+                const studentText = row.textContent.toLowerCase();
+                const studentDegree = row.getAttribute('data-degree');
+                
+                const matchesSearch = searchTerm === '' || studentText.includes(searchTerm);
+                const matchesDegree = selectedDegree === '' || studentDegree === selectedDegree;
+                
+                if (matchesSearch && matchesDegree) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+        
+        searchInput.addEventListener('input', filterStudents);
+        degreeFilter.addEventListener('change', filterStudents);
+        
+        // Initialize tooltips
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    });
+</script>
+
+<style>
+    /* Additional list styling */
+    .table-responsive {
+        border-radius: 15px;
+    }
+    
+    .student-row {
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .student-row:hover {
+        background-color: rgba(67, 97, 238, 0.05) !important;
+        transform: translateX(5px);
+    }
+    
+    .badge {
+        font-weight: 500;
+    }
+    
+    .btn-group .btn {
+        border-radius: 8px !important;
+        margin: 0 2px;
+    }
+    
+    .modal-content {
+        border-radius: 20px;
+        border: none;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+    
+    .modal-header {
+        border-radius: 20px 20px 0 0;
+    }
+</style>
 {% endblock content %}
