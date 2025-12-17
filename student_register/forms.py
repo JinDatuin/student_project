@@ -1,32 +1,9 @@
 from django import forms
-from .models import Student
+from .models import Student, Degree
 from django.core.validators import EmailValidator, RegexValidator
 import re
 
 class StudentForm(forms.ModelForm):
-    
-    # Custom widget for better date picker (if you add date fields later)
-    date_of_birth = forms.DateField(
-        required=False,
-        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
-        label='Date of Birth'
-    )
-    
-    # Additional fields with custom validation
-    phone_number = forms.CharField(
-        required=False,
-        max_length=15,
-        widget=forms.TextInput(attrs={
-            'class': 'form-control',
-            'placeholder': 'e.g., +1 (555) 123-4567'
-        }),
-        validators=[
-            RegexValidator(
-                regex=r'^\+?1?\d{9,15}$',
-                message="Phone number must be entered in the format: '+999999999'. Up to 15 digits allowed."
-            )
-        ]
-    )
     
     class Meta:
         model = Student
@@ -97,7 +74,8 @@ class StudentForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(StudentForm, self).__init__(*args, **kwargs)
         
-        # Set empty label for degree field
+        # Populate degree choices from the database
+        self.fields['degree'].queryset = Degree.objects.all()
         self.fields['degree'].empty_label = "Select Degree Program"
         
         # Add Bootstrap classes to all fields
@@ -116,20 +94,6 @@ class StudentForm(forms.ModelForm):
             if field.label:
                 field.widget.attrs['aria-label'] = field.label
 
-        # Customize degree choices (you can populate from database or settings)
-        degree_choices = [
-            ('', 'Select Degree Program'),
-            ('Computer Science', 'Bachelor of Computer Science'),
-            ('Engineering', 'Bachelor of Engineering'),
-            ('Business', 'Bachelor of Business Administration'),
-            ('Medicine', 'Bachelor of Medicine'),
-            ('Arts', 'Bachelor of Arts'),
-            ('Science', 'Bachelor of Science'),
-            ('Law', 'Bachelor of Laws'),
-            ('Education', 'Bachelor of Education'),
-        ]
-        self.fields['degree'].choices = degree_choices
-        
         # Set required attribute explicitly for better UX
         self.fields['student_number'].required = True
         self.fields['first_name'].required = True
@@ -144,12 +108,6 @@ class StudentForm(forms.ModelForm):
         
         # Remove any spaces and convert to uppercase
         student_number = student_number.strip().upper()
-        
-        # Validate format (adjust regex as needed)
-        if not re.match(r'^[A-Z]{3}-\d{4}-\d{3}$', student_number):
-            # You can make this more flexible or remove based on your needs
-            # For now, just a warning, not an error
-            pass
         
         # Check uniqueness (handled by model, but can add custom message)
         if Student.objects.filter(student_number=student_number).exclude(pk=self.instance.pk).exists():
