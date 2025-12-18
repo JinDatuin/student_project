@@ -1,0 +1,314 @@
+{% extends 'student_register_jzdn/base.html' %}
+
+{% block content %}
+<div class="student-list-container">
+  <div class="page-header">
+    <h2>Student List</h2>
+    <a href="{% url 'student_new_jzdn' %}" class="add-btn">+ Add Student</a>
+  </div>
+
+  <form method="get" class="filter-form">
+    <label for="degree">Filter by Degree:</label>
+    <select name="degree" id="degree">
+      <option value="">All Degrees</option>
+      {% for degree in degrees %}
+        <option value="{{ degree.id }}" {% if request.GET.degree == degree.id|stringformat:"s" %}selected{% endif %}>{{ degree.degree_title }}</option>
+      {% endfor %}
+    </select>
+    <button type="submit" class="filter-btn">Filter</button>
+    {% if request.GET.degree %}
+      <a href="{% url 'student_list_jzdn' %}" class="clear-filter">Clear Filter</a>
+    {% endif %}
+  </form>
+
+  <div class="table-wrapper">
+    <table class="student-table">
+      <thead>
+        <tr>
+          <th>Student ID</th>
+          <th>First Name</th>
+          <th>Middle Name</th>
+          <th>Last Name</th>
+          <th>Email</th>
+          <th>Degree</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for student in students %}
+          <tr>
+            <td>{{ student.student_id }}</td>
+            <td>{{ student.fname }}</td>
+            <td>{{ student.mname }}</td>
+            <td>{{ student.lname }}</td>
+            <td>{{ student.email }}</td>
+            <td>{{ student.degree }}</td>
+            <td class="action-cells">
+              <a href="{% url 'student_edit_jzdn' student.pk %}" class="edit-link">Edit</a>
+              <a href="{% url 'student_delete_jzdn' student.pk %}" class="delete-link">Delete</a>
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="7" class="no-data">No students found. <a href="{% url 'student_new_jzdn' %}">Add your first student</a></td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if page_obj.paginator.num_pages > 1 %}
+  <div class="pagination">
+    <span class="step-links">
+        {% if page_obj.has_previous %}
+            <a href="?page=1{% if request.GET.degree %}&degree={{ request.GET.degree }}{% endif %}" class="page-link">&laquo; first</a>
+            <a href="?page={{ page_obj.previous_page_number }}{% if request.GET.degree %}&degree={{ request.GET.degree }}{% endif %}" class="page-link">previous</a>
+        {% endif %}
+
+        <span class="current">
+            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+        </span>
+
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}{% if request.GET.degree %}&degree={{ request.GET.degree }}{% endif %}" class="page-link">next</a>
+            <a href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.degree %}&degree={{ request.GET.degree }}{% endif %}" class="page-link">last &raquo;</a>
+        {% endif %}
+    </span>
+  </div>
+  {% endif %}
+</div>
+
+<style>
+.student-list-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+.page-header h2 {
+  color: #2c3e50;
+  margin: 0;
+  font-size: 1.8rem;
+}
+
+.add-btn {
+  background: #4a6fa5;
+  color: white;
+  padding: 10px 20px;
+  text-decoration: none;
+  border-radius: 4px;
+  font-weight: 600;
+  transition: background 0.3s;
+}
+
+.add-btn:hover {
+  background: #3a5a8c;
+}
+
+.filter-form {
+  background: #f8f9fa;
+  padding: 15px;
+  border-radius: 6px;
+  margin-bottom: 25px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  border: 1px solid #dee2e6;
+}
+
+.filter-form label {
+  font-weight: 600;
+  color: #495057;
+}
+
+.filter-form select {
+  padding: 8px 12px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  background: white;
+  min-width: 200px;
+}
+
+.filter-btn {
+  background: #6c757d;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.filter-btn:hover {
+  background: #5a6268;
+}
+
+.clear-filter {
+  color: #6c757d;
+  text-decoration: none;
+  font-size: 0.9rem;
+  margin-left: 5px;
+}
+
+.clear-filter:hover {
+  text-decoration: underline;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+  border-radius: 6px;
+  border: 1px solid #dee2e6;
+  margin-bottom: 25px;
+  background: white;
+}
+
+.student-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 800px;
+}
+
+.student-table thead {
+  background: #4a6fa5;
+}
+
+.student-table th {
+  color: white;
+  padding: 15px 12px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid #3a5a8c;
+}
+
+.student-table td {
+  padding: 14px 12px;
+  border-bottom: 1px solid #e9ecef;
+  color: #495057;
+}
+
+.student-table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.student-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.action-cells {
+  display: flex;
+  gap: 12px;
+}
+
+.edit-link {
+  color: #4a6fa5;
+  text-decoration: none;
+  padding: 4px 8px;
+  border-radius: 3px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.edit-link:hover {
+  background: #f0f5ff;
+  text-decoration: underline;
+}
+
+.delete-link {
+  color: #e74c3c;
+  text-decoration: none;
+  padding: 4px 8px;
+  border-radius: 3px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.delete-link:hover {
+  background: #fff5f5;
+  text-decoration: underline;
+}
+
+.no-data {
+  text-align: center;
+  padding: 30px;
+  color: #6c757d;
+}
+
+.no-data a {
+  color: #4a6fa5;
+  text-decoration: none;
+}
+
+.no-data a:hover {
+  text-decoration: underline;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  padding: 20px 0;
+  border-top: 1px solid #e9ecef;
+  margin-top: 20px;
+}
+
+.step-links {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.page-link {
+  color: #4a6fa5;
+  text-decoration: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  border: 1px solid #dee2e6;
+  transition: all 0.2s;
+  font-size: 0.9rem;
+}
+
+.page-link:hover {
+  background: #f8f9fa;
+  text-decoration: none;
+}
+
+.current {
+  padding: 6px 12px;
+  color: #6c757d;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+  .student-list-container {
+    padding: 15px;
+  }
+  
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+  
+  .filter-form {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .filter-form select {
+    width: 100%;
+  }
+}
+</style>
+{% endblock %}

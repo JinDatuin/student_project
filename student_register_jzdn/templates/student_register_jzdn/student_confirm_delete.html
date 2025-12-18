@@ -1,0 +1,95 @@
+{% extends 'student_register_jzdn/base.html' %}
+
+{% block content %}
+  <div class="delete-confirmation-container">
+    <h2>Confirm Deletion</h2>
+    <div class="warning-message">
+      <p>Are you sure you want to delete <strong>{{ student_jzdn.fname }} {{ student_jzdn.lname }}</strong>?</p>
+      <p class="warning-note">This action cannot be undone.</p>
+    </div>
+    <form method="post" class="delete-form">
+      {% csrf_token %}
+      <div class="form-actions">
+        <button type="submit" class="delete-button">Delete Student</button>
+        <a href="{% url 'student_list_jzdn' %}" class="cancel-link">Cancel</a>
+      </div>
+    </form>
+  </div>
+
+  <style>
+    /* Simple styles for the delete confirmation page */
+    .delete-confirmation-container {
+      max-width: 500px;
+      margin: 2rem auto;
+      padding: 2rem;
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    h2 {
+      color: #e74c3c;
+      margin-top: 0;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 0.75rem;
+      margin-bottom: 1.5rem;
+    }
+    
+    .warning-message {
+      background-color: #fff9f9;
+      border-left: 4px solid #e74c3c;
+      padding: 1.25rem;
+      margin-bottom: 2rem;
+      border-radius: 0 4px 4px 0;
+    }
+    
+    .warning-message p {
+      margin: 0.5rem 0;
+    }
+    
+    .warning-note {
+      color: #e74c3c;
+      font-style: italic;
+      font-size: 0.9rem;
+    }
+    
+    .delete-form {
+      margin-top: 1.5rem;
+    }
+    
+    .form-actions {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+    
+    .delete-button {
+      background-color: #e74c3c;
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background-color 0.2s;
+    }
+    
+    .delete-button:hover {
+      background-color: #c0392b;
+    }
+    
+    .cancel-link {
+      color: #4a6fa5;
+      text-decoration: none;
+      padding: 0.75rem 1.5rem;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      transition: all 0.2s;
+    }
+    
+    .cancel-link:hover {
+      background-color: #f5f7fa;
+      text-decoration: underline;
+    }
+  </style>
+{% endblock %}
